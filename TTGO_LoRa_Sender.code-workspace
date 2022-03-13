@@ -5,6 +5,9 @@
 		},
 		{
 			"path": "."
+		},
+		{
+			"path": "..\\ESP32_LoRa_broker_Local"
 		}
 	],
 	"settings": {}
