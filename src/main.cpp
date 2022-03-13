@@ -148,6 +148,26 @@ bool WiFiConnect() {
   return retval;
 }
 
+
+/////////////////////////////////////////////////////
+// OTA
+/////////////////////////////////////////////////////
+#include <AsyncTCP.h>
+#include <ESPAsyncWebServer.h>
+#include <AsyncElegantOTA.h>
+
+AsyncWebServer server(80);
+
+void initOTA(){
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(200, "text/plain", "Hi! I am ESP32.");
+  });
+
+  AsyncElegantOTA.begin(&server);    // Start ElegantOTA
+  server.begin();
+  Serial.println("HTTP server started");
+}
+
 ////////////////////////////////
 // NTP
 ////////////////////////////////
@@ -224,10 +244,10 @@ void LoRa_rxMode(){
   LoRa.receive();                       // set receive mode
 }
 
-void LoRa_txMode(){
+/* void LoRa_txMode(){
   LoRa.idle();                          // set standby mode
   LoRa.enableInvertIQ();                // active invert I and Q signals
-}
+} */
 
 void onTxDone() {
   portENTER_CRITICAL_ISR(&mux);
@@ -396,7 +416,7 @@ void displayWait() {
   display.setCursor(0,1); 
   display.printf("DHT  %4.1fC %.0f%%",DHTtemperature, DHThumidity);
   display.setCursor(0,2); 
-  display.printf("Air  %3.0f (%3.0f)",correctedPPM,ppm); 
+  display.printf("Air  %4.0f (%4.0f)",correctedPPM,ppm); 
   display.setCursor(0,7);
   time_t nowTime = timeClient.getEpochTime();
   tm *n = localtime(&nowTime);
@@ -421,6 +441,7 @@ void setup() {
   initOLED();
 
   // LORA INIT
+  display.print("LoRa "); display.display();
   LoRa.setPins(LORA_CS,LORA_RST,LORA_IRQ);
   if (!LoRa.begin(LORA_BAND)) {
     LoRa.setSpreadingFactor(LORA_SPREADING_FACTOR);
@@ -432,18 +453,33 @@ void setup() {
     display.display();
     while (true);
   }
-  display.println("LoRa init OK.");
-  display.display();
+  display.println(" started"); display.display();
   //LoRa_rxMode();
 
   //attachInterrupt(digitalPinToInterrupt(LORA_IRQ), LoraIRQ, RISING);
   LoRa.onReceive(onReceive);
   LoRa.onTxDone(onTxDone);
 
+  // WiFi init
+  display.print("WiFi "); display.display();
+  WiFi.begin(AP_NAME, AP_PASSRHRASE);
+  WiFi.onEvent(onWifiEvent);
+  display.println("started"); display.display();
+
+  // OTA
+  display.print("OTA "); display.display();
+  initOTA();
+  display.println("started"); display.display();
+
+  // NTPClient init
+  display.print("NTP "); display.display();
+  timeClient.begin();
+  display.println(" started"); display.display();
+
   // DHT 
+  display.print("DHT22");display.display();
   dht22.begin();
-  display.println("DHT22 started");
-  display.display();
+  display.println(" started");display.display();
 
   // send Data timer 
   timerSend = timerBegin(0, 80, true);
@@ -459,16 +495,6 @@ void setup() {
   timerAir = timerBegin(2, 80, true);
   timerAttachInterrupt(timerAir, &onAir, true);
   timerAlarmWrite(timerAir, time_to_update_Air_msecs * mS_TO_S_FACTOR, true);
-
-  // WiFi init
-  WiFi.begin(AP_NAME, AP_PASSRHRASE);
-  WiFi.onEvent(onWifiEvent);
-
-   // NTPClient init
-  timeClient.begin();
-  Serial.println("NTPClient started");
-  display.println("NTP started");
-  display.display();
 
   // MQTT local mosquitto
   /* mqttClient.setServer(MQTT_SERVER,MQTT_PORT);
@@ -492,7 +518,7 @@ void loop(void)
     timerAlarmEnable(timerSend);
     timerAlarmEnable(timerNTP);
     timerAlarmEnable(timerAir);
-    // WiFiConnect();
+    WiFiConnect();
     /* reconnectMQTT();
     Serial.printf("MQTT_Local : subscribe to [%s] ",subStrTempInt);
     if (mqttClient.subscribe(subStrTempInt)) { Serial.println("OK"); } else { Serial.println("FAILED !"); } */
@@ -514,7 +540,7 @@ void loop(void)
   case NTP:
     if(!WiFi.isConnected()) WiFiConnect();
     timeClient.update();
-    WiFi.disconnect(true);
+    // WiFi.disconnect(true);
     state = WAIT;
     break;
 
@@ -548,4 +574,5 @@ void loop(void)
   }
 
   displayWait();
+
 }
