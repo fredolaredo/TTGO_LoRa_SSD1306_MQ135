@@ -8,7 +8,7 @@
 // timer counts
 ////////////////////////////////
 const uint64_t time_to_update_NTP_secs = 3600;
-const int time_to_send_msecs = 60003 ;
+const int time_to_send_msecs = 30013 ;
 const int time_to_update_Air_msecs = 4234 ;
 
 ////////////////////////////////
