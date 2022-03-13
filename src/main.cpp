@@ -170,10 +170,11 @@ float correctedRZero;
 float resistance;
 
 const float Ve = 5.0;
-const float R1 = 9720;   
-const float R2 = 5100;
+const float R2 = 5040;
+const float R1 = 9925;   
 
-const float diviseur = R1 / (R1 + R2); 
+
+const float diviseur = R2 / (R1 + R2); 
 
 #include <MQ135.h>
 #define PIN_MQ135 34
@@ -562,7 +563,7 @@ void loop(void)
   case SEND:
     prepareTxFrame(1);
     LoRa_sendMessage();
-    //flip_display = flip_display == 1 ? 0 : 1 ;
+    flip_display = flip_display == 1 ? 0 : 1 ;
     state = WAIT;
     break;
 
