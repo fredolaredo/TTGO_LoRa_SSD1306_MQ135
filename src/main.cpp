@@ -169,9 +169,6 @@ float rzero;
 float correctedRZero;
 float resistance;
 
-//pont diviseur
-// Ve --> R2 --> Vs --> R1 --> GND
-// Vs = R1 / (R1 + R2) * Ve
 const float Ve = 5.0;
 const float R1 = 9720;   
 const float R2 = 5100;
