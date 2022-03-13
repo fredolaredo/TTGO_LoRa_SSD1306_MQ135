@@ -8,7 +8,7 @@
 // timer counts
 ////////////////////////////////
 const uint64_t time_to_update_NTP_secs = 3600;
-const int time_to_send_msecs = 120003 ;
+const int time_to_send_msecs = 60003 ;
 const int time_to_update_Air_msecs = 4234 ;
 
 ////////////////////////////////
@@ -173,7 +173,6 @@ const float Ve = 5.0;
 const float R2 = 5040;
 const float R1 = 9925;   
 
-
 const float diviseur = R2 / (R1 + R2); 
 
 #include <MQ135.h>
@@ -183,7 +182,7 @@ float humidity = 55.0; // assume current humidity. Recommended to measure with D
 
 MQ135 mq135_sensor = MQ135(PIN_MQ135);
 
-void MQ135_read(int samples=4) {
+void MQ135_read(int samples=1) {
   ppm = 0;
   rzero = mq135_sensor.getRZero();
   correctedRZero = mq135_sensor.getCorrectedRZero(temperature, humidity);
@@ -287,7 +286,7 @@ size_t prepareTxFrame(uint8_t port) {
 ////////////////////////////////
 // MQTT
 ////////////////////////////////
-#include <PubSubClient.h>
+/* #include <PubSubClient.h>
 
 char subStrTempInt[64] = "home/cubecell/#";
 char recvTopic[128];
@@ -323,7 +322,7 @@ bool reconnectMQTT() {
   Serial.println(retval ? "OK" : "FAILED");
   return retval;
 }
-
+ */
 /////////////////////////////////////////////////////////////////////////
 // ESP32 deep sleep & machine state 
 /////////////////////////////////////////////////////////////////////////
@@ -368,40 +367,6 @@ U8X8_SSD1306_128X64_NONAME_HW_I2C display(/* reset= */ OLED_RST);
 //U8G2_SSD1306_128X64_NONAME_1_HW_I2C display();
 //U8G2_SSD1306_128X64_NONAME_1_HW_I2C display(U8G2_R2,OLED_RST);
 
-#define WIFI_HEIGHT   13
-#define WIFI_WIDTH    16
-static const unsigned char PROGMEM WiFiLogo[] =
-{ B00000111, B11100000,
-  B00111111, B11111100,
-  B01111000, B00011110,
-  B11100111, B11100111,
-  B00011111, B11111000,
-  B00111100, B00111100,
-  B00000011, B11000000,
-  B00000111, B11100000,
-  B00000100, B00000000,
-  B00000001, B10000000,
-  B00000011, B11000000,
-  B00000011, B11000000,
-  B00000001, B10000000 };
-
-#define NOWIFI_HEIGHT   13
-#define NOWIFI_WIDTH    16
-static const unsigned char PROGMEM noWiFiLogo[] =
-{ B11100111, B11100000,
-  B01111111, B11111100,
-  B01111000, B00011110,
-  B11111111, B11100111,
-  B00011111, B11111000,
-  B00111111, B00111100,
-  B00000011, B11000000,
-  B00000111, B11100000,
-  B00000100, B11100000,
-  B00000001, B11110000,
-  B00000011, B11111000,
-  B00000011, B11011100,
-  B00000001, B10001110 };
-
 void initOLED(void)
 { 
   display.begin();
@@ -438,7 +403,7 @@ void displayWait() {
   display.printf("%02d:%02d:%02d",n->tm_hour,n->tm_min,n->tm_sec);
   display.setCursor(14,7); WiFi.isConnected() ? display.print("Wi") : display.print("  ");
   display.setCursor(8, 7); LoRa.isTransmitting() ? display.print("Lo") : display.print("  ");
-  display.setCursor(11,7); mqttClient.connected() ? display.print("Mq") : display.print("  ");
+  //display.setCursor(11,7); mqttClient.connected() ? display.print("Mq") : display.print("  ");
   display.display();
 }
 
@@ -469,7 +434,7 @@ void setup() {
   }
   display.println("LoRa init OK.");
   display.display();
-  LoRa_rxMode();
+  //LoRa_rxMode();
 
   //attachInterrupt(digitalPinToInterrupt(LORA_IRQ), LoraIRQ, RISING);
   LoRa.onReceive(onReceive);
@@ -506,10 +471,10 @@ void setup() {
   display.display();
 
   // MQTT local mosquitto
-  mqttClient.setServer(MQTT_SERVER,MQTT_PORT);
+  /* mqttClient.setServer(MQTT_SERVER,MQTT_PORT);
   mqttClient.setCallback(receivedMQTT);
   display.println("MQTT started");
-  display.display();
+  display.display(); */
 
   delay(2000);
 
@@ -527,18 +492,18 @@ void loop(void)
     timerAlarmEnable(timerSend);
     timerAlarmEnable(timerNTP);
     timerAlarmEnable(timerAir);
-    WiFiConnect();
-    reconnectMQTT();
+    // WiFiConnect();
+    /* reconnectMQTT();
     Serial.printf("MQTT_Local : subscribe to [%s] ",subStrTempInt);
-    if (mqttClient.subscribe(subStrTempInt)) { Serial.println("OK"); } else { Serial.println("FAILED !"); }
+    if (mqttClient.subscribe(subStrTempInt)) { Serial.println("OK"); } else { Serial.println("FAILED !"); } */
     MQ135_read();
-    timeClient.update();
+    //timeClient.update();
     display.clearDisplay();
-    state = WAIT;
+    state = NTP;
     break;
   
   case WAIT:
-    mqttClient.loop();
+    //mqttClient.loop();
     break;
 
   case MQTT:
@@ -549,6 +514,7 @@ void loop(void)
   case NTP:
     if(!WiFi.isConnected()) WiFiConnect();
     timeClient.update();
+    WiFi.disconnect(true);
     state = WAIT;
     break;
 
@@ -563,7 +529,7 @@ void loop(void)
   case SEND:
     prepareTxFrame(1);
     LoRa_sendMessage();
-    flip_display = flip_display == 1 ? 0 : 1 ;
+    //flip_display = flip_display == 1 ? 0 : 1 ;
     state = WAIT;
     break;
 
