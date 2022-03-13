@@ -1,0 +1,4 @@
+(sym_lib_table
+  (lib (name MQ-Sensor)(type Legacy)(uri ${KIPRJMOD}/MQ-Sensor.lib)(options "")(descr ""))
+  (lib (name GAZ)(type Legacy)(uri E:/Dropbox/__Technologie/__Electronique/Librairie/Sensor_GAZ.lib)(options "")(descr ""))
+)
