@@ -369,6 +369,11 @@ void print_wakeup_reason(){
 
 }
 
+//////////////////////////////////////
+// Timzone and daylight 
+//////////////////////////////////////
+
+
 
 //////////////////////////////////////
 // OLED 
@@ -401,6 +406,14 @@ void initOLED(void)
 
 void displayWait() {
   display.setFlipMode(flip_display);
+  time_t nowTime = timeClient.getEpochTime();
+  tm *n = localtime(&nowTime);
+
+  if((n->tm_hour > 21) || (n->tm_hour < 10)) {
+    display.noDisplay();
+    return;
+  }
+  
   const uint8_t CONTRAST_PAS = 4;
   if (contrast_display > 254 - CONTRAST_PAS) contrast_up_down = -CONTRAST_PAS;
   if (contrast_display < CONTRAST_PAS + 1) contrast_up_down = +CONTRAST_PAS;
@@ -418,8 +431,6 @@ void displayWait() {
   display.setCursor(0,2); 
   display.printf("Air  %4.0f (%4.0f)",correctedPPM,ppm); 
   display.setCursor(0,7);
-  time_t nowTime = timeClient.getEpochTime();
-  tm *n = localtime(&nowTime);
   display.printf("%02d:%02d:%02d",n->tm_hour,n->tm_min,n->tm_sec);
   display.setCursor(14,7); WiFi.isConnected() ? display.print("Wi") : display.print("  ");
   display.setCursor(8, 7); LoRa.isTransmitting() ? display.print("Lo") : display.print("  ");
