@@ -409,7 +409,7 @@ void displayWait() {
   time_t nowTime = timeClient.getEpochTime();
   tm *n = localtime(&nowTime);
 
-  if((n->tm_hour > 21) || (n->tm_hour < 10)) {
+  if((n->tm_hour > 21) || (n->tm_hour < 9)) {
     display.noDisplay();
     return;
   }

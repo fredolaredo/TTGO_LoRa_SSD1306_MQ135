@@ -2,6 +2,9 @@
 	"folders": [
 		{
 			"path": "."
+		},
+		{
+			"path": "..\\TTGO_LoRa_SSD1306_CCS811"
 		}
 	],
 	"settings": {}
